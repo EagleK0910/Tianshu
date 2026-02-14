@@ -1,9 +1,2 @@
 {
-    "TOKEN": "MTQ3MTgzNzAzODEyNjAzOTA3Mw.GgKy5w.EgldFp0W_SBIIoGj-nTdvqb1ZeerLzwu5uppak",
-    "DATABASE_URL": "postgresql://root:iwulpzaUnh86gD7Z2Cjce31LXf954NO0@43.167.206.12:32634/zeabur",
-    "DEVELOPER_ID": 882991365351420005,
-    "CLIENT_ID": "1471837038126039073",
-    "CLIENT_SECRET": "d-wQRJGWv8FFOHEifEZ4UHolHUdi9AIh",
-    "SECRET_KEY": "fvtuybiuoimpo,kiouygutfrt7gy8oio58451efwfwsf5rwsf16",
-    "REDIRECT_URI": "http://localhost:8000/auth/callback"
 }
