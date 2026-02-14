@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動化設定 - {{ guild.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #36393f; }
+        .discord-card { background-color: #2f3136; border: 1px solid #4f545c33; }
+        .discord-input { background-color: #202225; border: 1px solid #202225; transition: border-color 0.2s; }
+        .discord-input:focus { border-color: #5865f2; outline: none; }
+    </style>
+</head>
+<body class="bg-[#2c2f33] text-white flex min-h-screen font-sans antialiased">
+
+    <aside class="w-64 bg-[#23272a] border-r border-gray-700 flex flex-col fixed h-full z-40">
+        <div class="p-6 flex items-center space-x-3">
+            <span class="text-2xl">🏮</span>
+            <h1 class="text-xl font-bold tracking-tight">管理員系統</h1>
+        </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <div class="py-4 space-y-2">
+                <a href="/guilds" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-arrow-left w-5 h-5 mr-3"></i>
+                    <span class="font-medium">返回伺服器列表</span>
+                </a>
+                <a href="/guild/{{ guild.id }}" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-users w-5 h-5 mr-3"></i>
+                    <span class="font-medium">成員管理</span>
+                </a>
+                <a href="/guild/{{ guild.id }}/settings" class="flex items-center px-4 py-3 bg-indigo-600/10 text-indigo-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-gears w-5 h-5 mr-3"></i>
+                    <span class="font-medium">自動化設定</span>
+                </a>
+            </div>
+
+            {% if user_role == "開發者" %}
+            <div class="pt-4 border-t border-gray-700">
+                <h2 class="text-gray-500 text-[10px] font-bold uppercase tracking-widest px-4 mb-2">系統管理</h2>
+                <a href="/developer/dashboard" class="flex items-center px-4 py-3 text-gray-400 hover:bg-purple-500/10 hover:text-purple-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-code w-5 h-5 mr-3"></i>
+                    <span class="font-medium">開發者中心</span>
+                </a>
+            </div>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-64 flex flex-col">
+        <header class="h-20 flex items-center justify-end px-10 sticky top-0 z-30 bg-[#2c2f33]/80 backdrop-blur-md border-b border-gray-700/30">
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm font-black text-white leading-tight">{{ user.username }}</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest mt-1">
+                        {% if user_role == "開發者" %}
+                            <span class="text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/20">💎 {{ user_role }}</span>
+                        {% elif user_role == "模板管理員" %}
+                            <span class="text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded border border-indigo-400/20">🛡️ {{ user_role }}</span>
+                        {% else %}
+                            <span class="text-gray-400 bg-gray-400/10 px-2 py-0.5 rounded border border-gray-400/20">👤 用戶</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="relative group">
+                    <button id="userMenuBtn" class="flex items-center focus:outline-none">
+                        <img src="{{ user.avatar }}" class="w-10 h-10 rounded-full border-2 border-transparent hover:border-indigo-500 transition-all shadow-lg cursor-pointer">
+                    </button>
+                    
+                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-[#23272a] border border-gray-700 rounded-2xl shadow-2xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <a href="/logout" class="flex items-center px-4 py-3 text-rose-400 hover:bg-rose-500/10 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket mr-3"></i>
+                            <span class="font-bold">安全登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-5xl mx-auto py-12 px-6 w-full">
+            <div class="mb-10">
+                <h1 class="text-3xl font-black text-white italic">AUTOMATION <span class="text-indigo-500">SETTINGS</span></h1>
+                <p class="text-gray-400 text-sm">管理伺服器的自動化獎懲規則與抵消開關</p>
+            </div>
+
+            <div class="discord-card rounded-3xl p-8 mb-8 flex items-center justify-between shadow-2xl">
+                <div class="max-w-lg">
+                    <h3 class="text-xl font-black text-white mb-2">⚖️ 獎懲抵消功能</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        啟用後，系統將計算實質分數（警告 - 嘉獎）。例如：成員有 3 次警告與 1 次嘉獎，實質警告將降為 2 次。
+                    </p>
+                </div>
+                <form action="/guild/{{ guild.id }}/settings/toggle-offset" method="POST">
+                    <input type="hidden" name="enabled" value="{{ 'false' if settings.offset_enabled else 'true' }}">
+                    <button type="submit" class="relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 {{ 'bg-indigo-600' if settings.offset_enabled else 'bg-gray-600' }}">
+                        <span class="inline-block h-6 w-6 transform rounded-full bg-white transition-all duration-300 {{ 'translate-x-7' if settings.offset_enabled else 'translate-x-1' }}"></span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1">
+                    <div class="discord-card rounded-3xl p-6 sticky top-8 shadow-xl">
+                        <h3 class="text-lg font-black text-white mb-6 flex items-center">
+                            <i class="fa-solid fa-plus-circle mr-2 text-indigo-400"></i> 新增規則
+                        </h3>
+                        
+                        <form action="/guild/{{ guild.id }}/settings/rule/save" method="POST" class="space-y-5">
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">判定類型</label>
+                                <select name="rule_type" id="ruleType" onchange="checkConflict()" class="discord-input w-full rounded-xl px-4 py-3 text-sm text-white">
+                                    <option value="警告">⚠️ 累積警告達...</option>
+                                    <option value="嘉獎">✨ 累積嘉獎達...</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">觸發門檻 (次數)</label>
+                                <input type="number" name="threshold" id="thresholdInput" min="1" required oninput="checkConflict()"
+                                       class="discord-input w-full rounded-xl px-4 py-3 text-sm text-white" placeholder="例如: 3">
+                                <p id="conflictWarning" class="hidden text-rose-500 text-[10px] mt-2 font-bold animate-bounce">
+                                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> 此門檻已存在規則，提交將會覆蓋舊設定
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">執行動作</label>
+                                <select name="action_type" id="actionType" onchange="toggleFields()" class="discord-input w-full rounded-xl px-4 py-3 text-sm text-white">
+                                    <option value="timeout">禁言 (Timeout)</option>
+                                    <option value="add_role">給予身分組</option>
+                                    <option value="kick">踢出伺服器</option>
+                                    <option value="ban">封鎖帳號</option>
+                                </select>
+                            </div>
+
+                            <div id="timeoutField">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">禁言時長 (分鐘)</label>
+                                <input type="number" name="timeout_duration" min="1" max="40320" value="60" 
+                                       class="discord-input w-full rounded-xl px-4 py-3 text-sm text-white">
+                            </div>
+
+                            <div id="roleField" class="hidden">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">目標身分組</label>
+                                <select name="role_id" class="discord-input w-full rounded-xl px-4 py-3 text-sm text-white">
+                                    {% for role in roles %}
+                                        <option value="{{ role.id }}">{{ role.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl transition shadow-lg mt-4">
+                                儲存規則設定
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <h3 class="text-lg font-black text-white mb-6 flex items-center">
+                        <i class="fa-solid fa-list-check mr-2 text-indigo-400"></i> 已啟用的規則
+                    </h3>
+                    
+                    {% if not rules %}
+                        <div class="discord-card rounded-3xl p-12 text-center">
+                            <p class="text-gray-500 font-bold">目前尚未設定任何自動化規則</p>
+                        </div>
+                    {% else %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% for r in rules %}
+                            <div class="discord-card p-6 rounded-3xl flex justify-between items-start group hover:border-indigo-500/50 transition shadow-lg">
+                                <div>
+                                    <span class="text-[9px] font-black px-2 py-0.5 rounded-full {{ 'bg-red-500/20 text-red-400' if r.type == '警告' else 'bg-yellow-500/20 text-yellow-400' }}">
+                                        {{ r.type }} {{ r.threshold }} 次
+                                    </span>
+                                    <h4 class="text-white font-black text-sm mt-2">
+                                        {% if r.action_type == 'timeout' %}
+                                            禁言 ({{ r.timeout_duration }} 分)
+                                        {% elif r.action_type == 'add_role' %}
+                                            給予身分組
+                                        {% elif r.action_type == 'kick' %}
+                                            踢出伺服器
+                                        {% elif r.action_type == 'ban' %}
+                                            封鎖帳號
+                                        {% endif %}
+                                    </h4>
+                                </div>
+                                
+                                <form action="/guild/{{ guild.id }}/settings/rule/delete/{{ r.id }}" method="POST">
+                                    <button type="submit" class="text-gray-600 hover:text-red-500 p-2 transition">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const rulesRaw = '{{ rules | tojson | safe }}';
+        const existingRules = JSON.parse(rulesRaw || '[]');
+
+        function checkConflict() {
+            const type = document.getElementById('ruleType').value;
+            const threshold = parseInt(document.getElementById('thresholdInput').value);
+            const warning = document.getElementById('conflictWarning');
+            const isConflict = existingRules.some(r => r.type === type && r.threshold === threshold);
+            isConflict ? warning.classList.remove('hidden') : warning.classList.add('hidden');
+        }
+
+        function toggleFields() {
+            const action = document.getElementById('actionType').value;
+            document.getElementById('timeoutField').classList.toggle('hidden', action !== 'timeout');
+            document.getElementById('roleField').classList.toggle('hidden', action !== 'add_role');
+        }
+
+        // 🚀 [新增] 使用者頭像選單腳本
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', () => {
+            if (!userDropdown.classList.contains('hidden')) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

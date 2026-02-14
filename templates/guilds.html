@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>伺服器列表 | 管理員系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#2c2f33] text-white flex min-h-screen font-sans">
+
+    <aside class="w-64 bg-[#23272a] border-r border-gray-700 flex flex-col fixed h-full z-40">
+        <div class="p-6 flex items-center space-x-3">
+            <span class="text-2xl">🏮</span>
+            <h1 class="text-xl font-bold tracking-tight">管理員系統</h1>
+        </div>
+        <nav class="flex-1 px-4 space-y-2 no-scrollbar overflow-y-auto">
+            <div class="py-4 space-y-2">
+                <a href="/guilds" class="flex items-center px-4 py-3 bg-indigo-600/10 text-indigo-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-server w-5 h-5 mr-3"></i>
+                    <span class="font-medium">伺服器列表</span>
+                </a>
+                <a href="/templates" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-layer-group w-5 h-5 mr-3"></i>
+                    <span class="font-medium">模板市場</span>
+                </a>
+            </div>
+
+            {% if user_role == "開發者" %}
+            <div class="pt-4 border-t border-gray-700">
+                <h2 class="text-gray-500 text-[10px] font-bold uppercase tracking-widest px-4 mb-2">系統管理</h2>
+                <a href="/developer/dashboard" class="flex items-center px-4 py-3 text-gray-400 hover:bg-purple-500/10 hover:text-purple-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-code w-5 h-5 mr-3"></i>
+                    <span class="font-medium">開發者中心</span>
+                </a>
+            </div>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-64 flex flex-col">
+        <header class="h-20 flex items-center justify-end px-10 sticky top-0 z-30 bg-[#2c2f33]/80 backdrop-blur-md border-b border-gray-700/30">
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm font-black text-white leading-tight">{{ user.username }}</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest mt-1">
+                        {% if user_role == "開發者" %}
+                            <span class="text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/20">💎 {{ user_role }}</span>
+                        {% elif user_role == "模板管理員" %}
+                            <span class="text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded border border-indigo-400/20">🛡️ {{ user_role }}</span>
+                        {% else %}
+                            <span class="text-gray-400 bg-gray-400/10 px-2 py-0.5 rounded border border-gray-400/20">👤 用戶</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="relative group">
+                    <button id="userMenuBtn" class="flex items-center focus:outline-none">
+                        <img src="{{ user.avatar }}" class="w-10 h-10 rounded-full border-2 border-transparent hover:border-indigo-500 transition-all shadow-lg cursor-pointer">
+                    </button>
+                    
+                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-[#23272a] border border-gray-700 rounded-2xl shadow-2xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <a href="/logout" class="flex items-center px-4 py-3 text-rose-400 hover:bg-rose-500/10 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket mr-3"></i>
+                            <span class="font-bold">安全登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-10 max-w-7xl mx-auto w-full">
+            <section class="mb-12">
+                <h2 class="text-2xl font-black mb-6 flex items-center italic">
+                    <span class="bg-indigo-500 w-2 h-8 mr-3 rounded-full"></span>已安裝機器人
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for g in installed %}
+                    <div class="bg-[#2f3136] rounded-3xl p-6 border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 shadow-xl group">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <img src="{{ g.icon or 'https://cdn.discordapp.com/embed/avatars/0.png' }}" class="w-16 h-16 rounded-2xl shadow-lg">
+                            <p class="font-bold text-white truncate text-lg">{{ g.name }}</p>
+                        </div>
+                        <a href="/guild/{{ g.id }}" class="block w-full text-center bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold transition">
+                            管理伺服器
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-black mb-6 flex items-center italic text-gray-400">
+                    <span class="bg-gray-600 w-2 h-8 mr-3 rounded-full"></span>未安裝機器人
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80">
+                    {% for g in not_installed %}
+                    <div class="bg-[#2f3136] rounded-3xl p-6 border border-gray-800 transition-all duration-300">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <img src="{{ g.icon or 'https://cdn.discordapp.com/embed/avatars/0.png' }}" class="w-16 h-16 rounded-2xl grayscale">
+                            <p class="font-bold text-gray-400 truncate text-lg">{{ g.name }}</p>
+                        </div>
+                        {% if g.is_admin %}
+                        <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands&guild_id={{ g.id }}" 
+                           target="_blank" class="block w-full text-center border-2 border-gray-700 text-gray-400 hover:border-indigo-500 hover:text-white py-2.5 rounded-xl text-sm font-bold transition">
+                           邀請機器人 
+                        </a>
+                        {% else %}
+                        <button disabled class="w-full text-center border border-gray-800 text-gray-700 py-2.5 rounded-xl text-sm cursor-not-allowed">
+                            無邀請權限
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        // 點擊頭像切換顯示選單
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // 點擊頁面其他地方關閉選單
+        window.addEventListener('click', () => {
+            if (!userDropdown.classList.contains('hidden')) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

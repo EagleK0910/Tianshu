@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成員管理 | {{ guild.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-[#2c2f33] text-white flex min-h-screen font-sans">
+
+    <aside class="w-64 bg-[#23272a] border-r border-gray-700 flex flex-col fixed h-full z-40">
+        <div class="p-6 flex items-center space-x-3">
+            <span class="text-2xl">🏮</span>
+            <h1 class="text-xl font-bold tracking-tight">管理員系統</h1>
+        </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <div class="py-4 space-y-2">
+                <a href="/guilds" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-arrow-left w-5 h-5 mr-3"></i>
+                    <span class="font-medium">返回伺服器列表</span>
+                </a>
+
+                <a href="/guild/{{ guild.id }}" class="flex items-center px-4 py-3 bg-indigo-600/10 text-indigo-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-users w-5 h-5 mr-3"></i>
+                    <span class="font-medium">成員管理</span>
+                </a>
+
+                <a href="/guild/{{ guild.id }}/settings" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-gears w-5 h-5 mr-3"></i>
+                    <span class="font-medium">自動化設定</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-64 flex flex-col">
+        <header class="h-20 flex items-center justify-end px-10 sticky top-0 z-30 bg-[#2c2f33]/80 backdrop-blur-md border-b border-gray-700/30">
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm font-black text-white leading-tight">{{ user.username }}</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest mt-1">
+                        {% if user_role == "開發者" %}
+                            <span class="text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/20">💎 {{ user_role }}</span>
+                        {% elif user_role == "模板管理員" %}
+                            <span class="text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded border border-indigo-400/20">🛡️ {{ user_role }}</span>
+                        {% else %}
+                            <span class="text-gray-400 bg-gray-400/10 px-2 py-0.5 rounded border border-gray-400/20">👤 用戶</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="relative group">
+                    <button id="userMenuBtn" class="flex items-center focus:outline-none">
+                        <img src="{{ user.avatar }}" class="w-10 h-10 rounded-full border-2 border-transparent hover:border-indigo-500 transition-all shadow-lg cursor-pointer">
+                    </button>
+                    
+                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-[#23272a] border border-gray-700 rounded-2xl shadow-2xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <a href="/logout" class="flex items-center px-4 py-3 text-rose-400 hover:bg-rose-500/10 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket mr-3"></i>
+                            <span class="font-bold">安全登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-7xl mx-auto w-full">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
+                <div>
+                    <h2 class="text-4xl font-black text-white italic">{{ guild.name }} <span class="text-indigo-500">MEMBERS</span></h2>
+                    <p class="text-gray-400 mt-2">身分：
+                        <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold border border-amber-500/30">
+                            🛡️ 伺服器管理權限
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-[#23272a] rounded-3xl border border-gray-700 overflow-hidden shadow-2xl">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-[#1e2124] text-gray-500 text-[10px] uppercase tracking-widest font-black">
+                            <th class="px-6 py-5">成員資訊</th>
+                            <th class="px-6 py-5 text-center">累積警告</th>
+                            <th class="px-6 py-5 text-center">累積嘉獎</th>
+                            <th class="px-6 py-5 text-right">快速管理</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700/50">
+                        {% for m in members %}
+                        <tr class="hover:bg-gray-700/10 transition group">
+                            <td class="px-6 py-4 flex items-center space-x-4">
+                                <img src="{{ m.display_avatar.url }}" class="w-12 h-12 rounded-2xl shadow-md border border-gray-600">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <p class="text-sm font-black text-white">{{ m.display_name }}</p>
+                                        {% if m.id == guild.owner_id %}
+                                            <span class="bg-amber-500/20 text-amber-500 text-[9px] px-1.5 py-0.5 rounded font-bold border border-amber-500/30">👑 擁有者</span>
+                                        {% elif m.id in admin_list %}
+                                            <span class="bg-indigo-500/20 text-indigo-400 text-[9px] px-1.5 py-0.5 rounded font-bold border border-indigo-500/30">🛡️ 管理員</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-[10px] text-gray-500 font-mono">{{ m.id }}</p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="text-xl font-black text-red-500 font-mono">
+                                    {{ stats[m.id].warning_points if m.id in stats else 0 }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="text-xl font-black text-amber-500 font-mono">
+                                    {{ stats[m.id].commend_points if m.id in stats else 0 }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex space-x-2">
+                                    {% if is_owner or (m.id not in admin_list and m.id != guild.owner_id) %}
+                                        <button onclick="openModModal('{{ m.id }}', '{{ m.display_name }}', 'warn')" class="bg-red-500/20 text-red-400 px-3 py-1 rounded-lg border border-red-500/30 hover:bg-red-500 hover:text-white transition">警告</button>
+                                        <button onclick="openModModal('{{ m.id }}', '{{ m.display_name }}', 'reward')" class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-lg border border-yellow-500/30 hover:bg-yellow-500 hover:text-white transition">嘉獎</button>
+                                    {% else %}
+                                        <span class="text-gray-500 text-xs italic">身分受保護</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="modModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#2f3136] w-full max-w-md rounded-2xl border border-gray-700 shadow-2xl overflow-hidden">
+            <form id="modForm" method="POST">
+                <div class="p-6">
+                    <h3 id="modalTitle" class="text-xl font-black text-white mb-4">登記獎懲</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">變動次數</label>
+                            <input type="number" name="count" value="1" min="1" class="w-full bg-[#202225] border border-gray-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">原因</label>
+                            <textarea name="reason" rows="3" class="w-full bg-[#202225] border border-gray-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500" placeholder="請輸入原因..."></textarea>
+                        </div>
+                        <input type="hidden" name="action_type" id="modalActionType">
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-[#292b2f] flex justify-end space-x-3">
+                    <button type="button" onclick="closeModModal()" class="text-gray-400 hover:text-white px-4 py-2">取消</button>
+                    <button type="submit" id="submitBtn" class="px-6 py-2 rounded-xl font-bold text-white transition shadow-lg">確認提交</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 🚀 [新增] 使用者頭像選單腳本
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', () => {
+            if (!userDropdown.classList.contains('hidden')) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+
+        // 既有的 Modal 腳本
+        function openModModal(targetId, targetName, type) {
+            const modal = document.getElementById('modModal');
+            const form = document.getElementById('modForm');
+            const title = document.getElementById('modalTitle');
+            const actionTypeInput = document.getElementById('modalActionType');
+            const submitBtn = document.getElementById('submitBtn');
+
+            form.action = `/guild/{{ guild.id }}/member/${targetId}/action`;
+            
+            if (type === 'warn') {
+                title.innerText = `⚠️ 為 ${targetName} 登記警告`;
+                submitBtn.className = "px-6 py-2 rounded-xl font-bold text-white transition shadow-lg bg-red-600 hover:bg-red-500";
+                actionTypeInput.value = 'warn';
+            } else {
+                title.innerText = `✨ 為 ${targetName} 登記嘉獎`;
+                submitBtn.className = "px-6 py-2 rounded-xl font-bold text-white transition shadow-lg bg-yellow-600 hover:bg-yellow-500";
+                actionTypeInput.value = 'reward';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModModal() {
+            document.getElementById('modModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

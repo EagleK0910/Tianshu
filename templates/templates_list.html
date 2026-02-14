@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模板市場 | 管理員系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+</head>
+<body class="bg-[#2c2f33] text-white flex min-h-screen font-sans">
+
+    <aside class="w-64 bg-[#23272a] border-r border-gray-700 flex flex-col fixed h-full z-40">
+        <div class="p-6 flex items-center space-x-3">
+            <span class="text-2xl">🏮</span>
+            <h1 class="text-xl font-bold tracking-tight">管理員系統</h1>
+        </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <div class="py-4">
+                <a href="/guilds" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-server w-5 h-5 mr-3"></i>
+                    <span class="font-medium">伺服器列表</span>
+                </a>
+                <a href="/templates" class="flex items-center px-4 py-3 bg-indigo-600/10 text-indigo-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-layer-group w-5 h-5 mr-3"></i>
+                    <span class="font-medium">模板市場</span>
+                </a>
+            </div>
+
+            {% if user_role == "開發者" %}
+            <div class="pt-4 border-t border-gray-700">
+                <h2 class="text-gray-500 text-[10px] font-bold uppercase tracking-widest px-4 mb-2">系統管理</h2>
+                <a href="/developer/dashboard" class="flex items-center px-4 py-3 text-gray-400 hover:bg-purple-500/10 hover:text-purple-400 rounded-xl transition-all">
+                    <i class="fa-solid fa-code w-5 h-5 mr-3"></i>
+                    <span class="font-medium">開發者中心</span>
+                </a>
+            </div>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-64 flex flex-col">
+        <header class="h-20 flex items-center justify-end px-10 sticky top-0 z-30 bg-[#2c2f33]/80 backdrop-blur-md border-b border-gray-700/30">
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm font-black text-white leading-tight">{{ user.username }}</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest mt-1">
+                        {% if user_role == "開發者" %}
+                            <span class="text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/20">💎 {{ user_role }}</span>
+                        {% elif user_role == "模板管理員" %}
+                            <span class="text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded border border-indigo-400/20">🛡️ {{ user_role }}</span>
+                        {% else %}
+                            <span class="text-gray-400 bg-gray-400/10 px-2 py-0.5 rounded border border-gray-400/20">👤 用戶</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="relative group">
+                    <button id="userMenuBtn" class="flex items-center focus:outline-none">
+                        <img src="{{ user.avatar }}" class="w-10 h-10 rounded-full border-2 border-transparent hover:border-indigo-500 transition-all shadow-lg cursor-pointer">
+                    </button>
+                    
+                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-[#23272a] border border-gray-700 rounded-2xl shadow-2xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <a href="/logout" class="flex items-center px-4 py-3 text-rose-400 hover:bg-rose-500/10 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket mr-3"></i>
+                            <span class="font-bold">安全登出</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-10 max-w-7xl mx-auto w-full">
+            <div class="flex justify-between items-end mb-10">
+                <div>
+                    <h2 class="text-4xl font-black italic tracking-tighter text-white">TEMPLATE <span class="text-indigo-500 uppercase">Market</span></h2>
+                    <p class="text-gray-400 mt-2">尋找適合您伺服器的專業配置。</p>
+                </div>
+                <button onclick="openModal('uploadModal')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-2xl font-bold transition shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i>發布模板
+                </button>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-6 mb-8">
+                <div class="flex bg-[#23272a] p-1 rounded-2xl border border-gray-700 h-fit">
+                    <a href="/templates" class="px-6 py-2 rounded-xl text-sm font-bold transition {{ 'bg-gray-700 text-white shadow-md' if not show_mine else 'text-gray-500 hover:text-gray-300' }}">
+                        全體市場
+                    </a>
+                    <a href="/templates?mine=true" class="px-6 py-2 rounded-xl text-sm font-bold transition {{ 'bg-gray-700 text-white shadow-md' if show_mine else 'text-gray-500 hover:text-gray-300' }}">
+                        <i class="fa-solid fa-user-pen mr-1"></i>我的模板
+                    </a>
+                </div>
+                
+                <form action="/templates" method="GET" class="flex-1 flex gap-2">
+                    <input type="text" name="search" placeholder="搜尋模板名稱或描述..." 
+                        class="flex-1 bg-[#23272a] border border-gray-700 rounded-2xl px-6 py-3 focus:outline-none focus:border-indigo-500 transition shadow-inner">
+                    {% if show_mine %}<input type="hidden" name="mine" value="true">{% endif %}
+                    <button type="submit" class="bg-gray-700 hover:bg-gray-600 px-6 rounded-2xl transition border border-gray-600">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="flex items-center space-x-2 mb-10 overflow-x-auto no-scrollbar pb-2">
+                <i class="fa-solid fa-filter text-gray-600 mr-2"></i>
+                {% for cat in ['全部', '社群交流', '遊戲競技', '商務辦公', '其他類型'] %}
+                <a href="/templates?category={{ cat }}{{ '&mine=true' if show_mine else '' }}" 
+                   class="px-5 py-2 rounded-full text-xs font-black transition whitespace-nowrap border {{ 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20' if current_category == cat else 'bg-[#23272a] border-gray-700 text-gray-500 hover:border-gray-500' }}">
+                    {{ cat }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for t in templates %}
+                <div class="bg-[#2f3136] rounded-3xl border border-gray-700/50 overflow-hidden hover:border-indigo-500/50 transition-all duration-300 group shadow-xl relative">
+                    <div class="p-7">
+                        <div class="flex items-center space-x-4 mb-5">
+                            <div class="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20">
+                                <i class="fa-solid fa-layer-group text-indigo-400 text-xl"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h3 class="font-bold text-white truncate text-lg">{{ t.template_name }}</h3>
+                                <span class="text-[9px] bg-gray-800 px-2 py-0.5 rounded text-gray-500 font-black uppercase tracking-widest">{{ t.category }}</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-400 text-xs line-clamp-2 mb-8 h-8 leading-relaxed">{{ t.description or '作者沒有提供詳細描述。' }}</p>
+                        
+                        <div class="flex flex-col gap-2">
+                            <a href="{{ t.link }}" target="_blank" class="block w-full text-center bg-gray-700 hover:bg-indigo-600 text-white py-3.5 rounded-2xl text-xs font-black transition-all shadow-md group-hover:shadow-indigo-500/10">
+                                <i class="fa-solid fa-up-right-from-square mr-2"></i>預覽並套用模板
+                            </a>
+
+                            {% if t.uploader_id|int == current_user_id|int or user_role == "開發者" %}
+                            <div class="flex gap-2 border-t border-gray-700/50 pt-4 mt-2">
+                                <button onclick="openEditModal('{{ t.id }}', '{{ t.template_name }}', '{{ t.description }}', '{{ t.category }}')" 
+                                    class="flex-1 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white py-2.5 rounded-xl text-xs font-bold transition-all border border-indigo-500/20">
+                                    <i class="fa-solid fa-pen-to-square mr-1"></i>修改
+                                </button>
+                                <form action="/templates/delete/{{ t.id }}" method="POST" class="flex-1" onsubmit="return confirm('確定要永久刪除此模板嗎？');">
+                                    <button type="submit" class="w-full bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white py-2.5 rounded-xl text-xs font-bold transition-all border border-red-500/20">
+                                        <i class="fa-solid fa-trash-can mr-1"></i>刪除
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-span-full py-32 text-center">
+                    <div class="w-24 h-24 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-solid fa-box-open text-4xl text-gray-700"></i>
+                    </div>
+                    <p class="text-gray-500 font-bold text-xl">目前沒有符合條件的模板</p>
+                    <p class="text-gray-600 text-sm mt-1 italic">試著更換分類或搜尋詞彙</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#2f3136] w-full max-w-lg rounded-3xl border border-gray-700 shadow-2xl overflow-hidden">
+            <div class="p-8">
+                <h3 class="text-2xl font-black italic mb-6">發布新的傑作</h3>
+                <form action="/templates/upload" method="POST" class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">模板名稱</label>
+                        <input type="text" name="template_name" required class="w-full bg-[#202225] border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">Discord 模板連結</label>
+                        <input type="url" name="link" required placeholder="https://discord.new/..." class="w-full bg-[#202225] border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">分類</label>
+                        <select name="category" class="w-full bg-[#202225] border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none text-sm appearance-none">
+                            <option>社群交流</option>
+                            <option>遊戲競技</option>
+                            <option>商務辦公</option>
+                            <option>其他類型</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">簡單描述</label>
+                        <textarea name="description" rows="3" class="w-full bg-[#202225] border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 text-sm resize-none"></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-6">
+                        <button type="button" onclick="closeModal('uploadModal')" class="flex-1 py-4 font-bold text-gray-500 hover:text-white transition">取消</button>
+                        <button type="submit" class="flex-2 bg-indigo-600 px-10 py-4 rounded-2xl font-bold hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/20">立即發布</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#2f3136] w-full max-w-lg rounded-3xl border border-gray-700 shadow-2xl overflow-hidden">
+            <div class="p-8">
+                <h3 class="text-2xl font-black italic mb-6 text-indigo-400">修改您的模板</h3>
+                <form id="editForm" method="POST" class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">修改名稱</label>
+                        <input type="text" id="edit_name" name="template_name" required class="w-full bg-[#202225] border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">分類變更</label>
+                        <select id="edit_category" name="category" class="w-full bg-[#202225] border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none text-sm appearance-none">
+                            <option>社群交流</option>
+                            <option>遊戲競技</option>
+                            <option>商務辦公</option>
+                            <option>其他類型</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 px-1">詳細描述更新</label>
+                        <textarea id="edit_description" name="description" rows="5" class="w-full bg-[#202225] border border-gray-700 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 text-sm resize-none"></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-6">
+                        <button type="button" onclick="closeModal('editModal')" class="flex-1 py-4 font-bold text-gray-500 hover:text-white transition">放棄修改</button>
+                        <button type="submit" class="flex-2 bg-indigo-600 px-10 py-4 rounded-2xl font-bold transition shadow-lg shadow-indigo-600/20">儲存變更</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function openEditModal(id, name, desc, cat) {
+            const form = document.getElementById('editForm');
+            // 動態設定修改 API 路徑
+            form.action = `/templates/edit/${id}`;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_description').value = desc;
+            document.getElementById('edit_category').value = cat;
+            openModal('editModal');
+        }
+
+        // 關閉點擊 Modal 外部時的行為
+        window.onclick = function(event) {
+            if (event.target.id.includes('Modal')) {
+                event.target.classList.add('hidden');
+            }
+        }
+
+        // 🚀 [新增] 使用者頭像選單腳本
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        if (userMenuBtn && userDropdown) {
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', () => {
+                if (!userDropdown.classList.contains('hidden')) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

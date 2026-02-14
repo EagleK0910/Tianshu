@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>審核專區 | 管理員系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#2c2f33] text-white flex min-h-screen font-sans">
+
+    <aside class="w-64 bg-[#23272a] border-r border-gray-700 flex flex-col fixed h-full z-40">
+        <div class="p-6 flex items-center space-x-3">
+            <span class="text-2xl">🏮</span>
+            <h1 class="text-xl font-bold tracking-tight">管理員系統</h1>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-2 no-scrollbar overflow-y-auto">
+            <div class="py-4">
+                <h2 class="text-gray-500 text-[10px] font-bold uppercase tracking-widest px-4 mb-2">主選單</h2>
+                <a href="/guilds" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-server w-5 h-5 mr-3"></i>
+                    <span class="font-medium">伺服器列表</span>
+                </a>
+
+                <a href="/templates" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-all">
+                    <i class="fa-solid fa-cubes w-5 h-5 mr-3"></i>
+                    <span class="font-medium">模板中心</span>
+                </a>
+            </div>
+
+            {% if user_role == "開發者" or user_role == "模板管理員" %}
+            <div class="pt-4 border-t border-gray-700">
+                <h2 class="text-gray-500 text-[10px] font-bold uppercase tracking-widest px-4 mb-2">管理專區</h2>
+                <a href="/templates/review" class="flex items-center px-4 py-3 bg-amber-500/10 text-amber-500 rounded-xl transition-all">
+                    <i class="fa-solid fa-shield-halved w-5 h-5 mr-3"></i>
+                    <span class="font-medium">審核專區</span>
+                </a>
+                {% if user_role == "開發者" %}
+                <a href="/dev-center" class="flex items-center px-4 py-3 text-gray-400 hover:bg-purple-500/10 hover:text-purple-400 rounded-xl transition-all mt-2">
+                    <i class="fa-solid fa-code w-5 h-5 mr-3"></i>
+                    <span class="font-medium">開發者中心</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-64 flex flex-col">
+        
+        <header class="bg-[#23272a]/80 backdrop-blur-md sticky top-0 z-30 p-4 flex justify-end items-center border-b border-gray-700 px-8">
+            <div class="relative group">
+                <div class="flex items-center space-x-3 cursor-pointer p-1 pr-3 rounded-full hover:bg-gray-700/50 transition">
+                    <img src="{{ user.avatar }}" class="w-9 h-9 rounded-full border-2 border-indigo-500/50">
+                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-500 group-hover:text-white transition"></i>
+                </div>
+                <div class="absolute right-0 mt-3 w-64 bg-[#23272a] border border-gray-700 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2 overflow-hidden">
+                    <div class="p-5 border-b border-gray-700 bg-gradient-to-br from-gray-800 to-transparent">
+                        <p class="text-white font-bold text-lg truncate mb-1">{{ user.username }}</p>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold uppercase tracking-wider">
+                            🛡️ {{ user_role }}
+                        </span>
+                    </div>
+                    <div class="p-2">
+                        <a href="/logout" class="flex items-center px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition">
+                            <i class="fa-solid fa-right-from-bracket mr-3"></i> 登出帳號
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-5xl mx-auto w-full">
+            <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <nav class="flex mb-4 text-xs font-medium text-gray-500 uppercase tracking-widest">
+                        <a href="/templates" class="hover:text-white transition">模板中心</a>
+                        <span class="mx-2">/</span>
+                        <span class="text-amber-500">審核專區</span>
+                    </nav>
+                    <h2 class="text-4xl font-black text-white italic">審核中心 <span class="text-amber-500">REVIEW</span></h2>
+                    <p class="text-gray-400 mt-2 text-sm">目前有 <span class="text-white font-bold">{{ reviews|length }}</span> 筆待處理的申請案。</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                {% for t in reviews %}
+                <div class="bg-[#23272a] rounded-3xl p-6 border border-gray-700 hover:border-amber-500/50 transition-all duration-300 shadow-xl relative overflow-hidden group">
+                    <div class="absolute -right-4 -bottom-4 text-7xl font-black text-white/5 select-none pointer-events-none group-hover:text-amber-500/10 transition-colors">
+                        #{{ t.id }}
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                        <div class="flex-1 space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="px-2 py-0.5 rounded-md bg-amber-500 text-black text-[9px] font-black uppercase">
+                                    {{ t.status }}
+                                </span>
+                                <span class="text-xs text-gray-500 font-mono">ID: {{ t.id }}</span>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-1">{{ t.template_name }}</h3>
+                                <p class="text-gray-400 text-sm leading-relaxed max-w-2xl">
+                                    {{ t.description or "這位上傳者很懶，什麼都沒寫..." }}
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-4 pt-2">
+                                <div class="flex items-center text-xs text-gray-400 bg-gray-800/50 px-3 py-1.5 rounded-full">
+                                    <i class="fa-solid fa-circle-user mr-2 text-amber-500"></i>
+                                    {{ t.uploader_name }}
+                                </div>
+                                <div class="flex items-center text-xs text-gray-400 bg-gray-800/50 px-3 py-1.5 rounded-full">
+                                    <i class="fa-solid fa-folder-open mr-2 text-amber-500"></i>
+                                    {{ t.category }}
+                                </div>
+                                <a href="{{ t.link }}" target="_blank" class="flex items-center text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-full border border-indigo-500/20 transition">
+                                    <i class="fa-solid fa-link mr-2"></i> 查看模板內容
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="flex md:flex-col gap-3 w-full md:w-32">
+                            <form action="/templates/action/{{ t.id }}" method="post" class="flex-1">
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-black font-black py-3 rounded-2xl text-sm transition-all shadow-lg shadow-green-500/20">
+                                    通過
+                                </button>
+                            </form>
+                            <form action="/templates/action/{{ t.id }}" method="post" class="flex-1">
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="w-full bg-transparent border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white font-bold py-3 rounded-2xl text-sm transition-all">
+                                    駁回
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex flex-col items-center justify-center py-24 bg-[#23272a] rounded-3xl border-2 border-dashed border-gray-700">
+                    <div class="text-6xl mb-4 opacity-20">☕</div>
+                    <p class="text-gray-500 font-medium">目前沒有待審核的案件</p>
+                    <p class="text-gray-600 text-xs mt-1">您可以稍微休息一下，或去模板中心看看。</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 如果有按鈕點擊後的特殊動畫可以加在這裡
+    </script>
+</body>
+</html>
