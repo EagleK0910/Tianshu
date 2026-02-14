@@ -1,0 +1,10 @@
+discord.py
+asyncpg
+python-dotenv
+apscheduler
+asyncpg
+authlib 
+httpx 
+itsdangerous
+python-multipart
+views
