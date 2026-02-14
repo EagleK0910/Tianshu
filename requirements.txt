@@ -1,10 +1,9 @@
 discord.py
+fastapi
+uvicorn
+jinja2
 asyncpg
-python-dotenv
-apscheduler
-asyncpg
-authlib 
-httpx 
-itsdangerous
 python-multipart
-views
+httpx
+requests
+uvloop
